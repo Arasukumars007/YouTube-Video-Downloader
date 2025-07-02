@@ -3,7 +3,7 @@ from yt_dlp import YoutubeDL
 import os
 import uuid
 
-app = Flask(_name_)
+app = Flask(__name__)
 
 DOWNLOAD_FOLDER = "downloads"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
