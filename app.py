@@ -1,9 +1,11 @@
 from flask import Flask, request, send_file, jsonify
+from flask_cors import CORS  # ✅ Add this
 from yt_dlp import YoutubeDL
 import os
 import uuid
 
-app = Flask(__name__)
+app = Flask(_name_)
+CORS(app)  # ✅ This enables cross-origin requests
 
 DOWNLOAD_FOLDER = "downloads"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
@@ -37,5 +39,5 @@ def download_video():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-if __name__ == "__main__":
+if _name_ == "_main_":
     app.run(host="0.0.0.0", port=10000)
