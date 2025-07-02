@@ -1,74 +1,41 @@
-from flask import Flask, request, send_file, Response
-from pytube import YouTube
+from flask import Flask, request, send_file, jsonify
+from yt_dlp import YoutubeDL
+import os
+import uuid
 
-app = Flask(__name__)
+app = Flask(_name_)
 
-@app.route('/')
-def index():
-    return """
-<!DOCTYPE html>
-<html lang='en'>
-<head>
-    <meta charset='UTF-8'>
-    <title>YouTube Downloader</title>
-</head>
-<body>
-    <h2>YouTube Video Downloader</h2>
-    <input type='text' id='url' placeholder='Paste YouTube URL' />
-    <button onclick='download()'>Download</button>
+DOWNLOAD_FOLDER = "downloads"
+os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
-    <script>
-    async function download() {
-        const url = document.getElementById("url").value;
-        if (!url) {
-            alert("Please enter a URL!");
-            return;
-        }
+@app.route("/")
+def home():
+    return jsonify({"message": "YouTube Downloader Backend is running."})
 
-        const response = await fetch("/download", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ url: url })
-        });
-
-        if (!response.ok) {
-            const error = await response.text();
-            alert("Error: " + error);
-            return;
-        }
-
-        const blob = await response.blob();
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = downloadUrl;
-        a.download = "video.mp4";
-        a.click();
-    }
-    </script>
-</body>
-</html>
-"""
-
-@app.route('/download', methods=['POST'])
+@app.route("/download", methods=["POST"])
 def download_video():
+    data = request.get_json()
+    video_url = data.get("url")
+
+    if not video_url:
+        return jsonify({"error": "No URL provided"}), 400
+
     try:
-        data = request.get_json()
-        print("📦 Received JSON:", data)
+        filename = f"{uuid.uuid4()}.mp4"
+        filepath = os.path.join(DOWNLOAD_FOLDER, filename)
 
-        if not data or 'url' not in data:
-            return Response("Invalid or missing URL", status=400)
+        ydl_opts = {
+            'format': 'best',
+            'outtmpl': filepath,
+        }
 
-        url = data['url']
-        yt = YouTube(url)
-        stream = yt.streams.get_highest_resolution()
-        filename = "video.mp4"
-        stream.download(filename=filename)
-        return send_file(filename, as_attachment=True)
+        with YoutubeDL(ydl_opts) as ydl:
+            ydl.download([video_url])
+
+        return send_file(filepath, as_attachment=True)
 
     except Exception as e:
-        return Response(str(e), status=400)
+        return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
+if _name_ == "_main_":
     app.run(debug=True)
