@@ -4,7 +4,7 @@ from yt_dlp import YoutubeDL
 import os
 import uuid
 
-app = Flask(_name_)
+app = Flask(__name__)
 CORS(app)  # <-- ADD THIS LINE
 
 DOWNLOAD_FOLDER = "downloads"
